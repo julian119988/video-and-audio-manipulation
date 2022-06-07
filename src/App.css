@@ -33,8 +33,8 @@
   filter: blur(10px);
 }
 .unBlur {
-  -webkit-filter: blur(0) !important;
-  filter: blur(0) !important;
+  -webkit-filter: blur(0px) !important;
+  filter: blur(0px) !important;
 }
 
 @keyframes App-logo-spin {
