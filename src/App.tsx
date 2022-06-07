@@ -55,7 +55,9 @@ function App() {
         setDuration(tempVideo.duration);
       };
       tempVideo.src = URL.createObjectURL(event.target.files[0]);
-
+      if (videoFile) {
+        playerRef.current?.disconnect();
+      }
       //@ts-ignore
       playerRef.current = new Tone.Player(
         URL.createObjectURL(event.target.files[0]),
@@ -73,7 +75,7 @@ function App() {
   const isPlaying = () => {
     // animationRef.current = requestAnimationFrame(whilePlaying);
     animationRef.current = window.setInterval(whilePlaying, 200);
-
+    console.log('IS PLAYING --> ')
     //@ts-ignore
     Tone.Transport.start();
     if (videoTagRef.current) {
@@ -85,8 +87,26 @@ function App() {
           ((duration * 3) / 4 - videoTagRef.current?.currentTime) | duration
         }s ease-out`;
       }
+      addBlur()
     }
   };
+  const addBlur = () => {
+    if(videoTagRef.current) {
+      currentTime = videoTagRef.current ? videoTagRef.current?.currentTime : 0;
+      const threeQuartersTotal = duration * (3 / 4);
+      console.log('currentTime <= threeQuartersTotal -> ', currentTime <= threeQuartersTotal)
+      if (currentTime <= threeQuartersTotal) {
+        const filterValue =
+          "blur(" +
+          ((100 - (currentTime * 100) / threeQuartersTotal) / 10).toString() +
+          "px)";
+        videoTagRef.current.style.filter = filterValue;
+        videoTagRef.current.classList.remove("unBlur");
+        videoTagRef.current.style.transition = "";
+      }
+    }
+  }
+
   const whilePlaying = () => {
     currentTime = videoTagRef.current ? videoTagRef.current?.currentTime : 0;
     calculatePitch();
@@ -100,17 +120,7 @@ function App() {
       //   filter = computedStyle.getPropertyValue("filter");
       // videoTagRef.current.style.filter = filter;
       // videoTagRef.current.classList.remove("unBlur");
-
-      const threeQuartersTotal = duration * (3 / 4);
-      if (currentTime <= threeQuartersTotal) {
-        const filterValue =
-          "blur(" +
-          ((100 - (currentTime * 100) / threeQuartersTotal) / 10).toString() +
-          "px)";
-        videoTagRef.current.style.filter = filterValue;
-        videoTagRef.current.classList.remove("unBlur");
-        videoTagRef.current.style.transition = "";
-      }
+      addBlur()
     }
     //@ts-ignore
     Tone.Transport.pause();
@@ -121,10 +131,11 @@ function App() {
     const threeQuartersTotal = duration * (3 / 4);
     const pitchStep = startingPitch / (threeQuartersTotal / 0.2);
     const currentPitch = (currentTime / 0.2) * pitchStep;
+    Tone.Transport.seconds = currentTime;
     if (pitchRef.current && pitchRef.current.pitch >= 0) {
       if (startingPitch - currentPitch >= 0) {
         pitchRef.current.pitch = startingPitch - currentPitch;
-        console.log(pitchRef.current.pitch);
+        //console.log(pitchRef.current.pitch);
       } else {
         pitchRef.current.pitch = 0;
       }
@@ -157,10 +168,11 @@ function App() {
                 ref={videoTagRef}
                 controls
                 onPlaying={isPlaying}
-                onPause={isPausing}
-                onEnded={resetAudio}
+                onPause={() => {isPausing(); console.log('FROM ON PAUSE')}}
+                onEnded={() => {resetAudio(); console.log('ENDED') }}
                 className={`blur ${isAudioPlaying && "unBlur"}`}
                 muted
+                onSeeked={isPausing}
               />
               {/* <Blur blur={a}></Blur> */}
               <button onClick={resetAudio}>reset</button>
