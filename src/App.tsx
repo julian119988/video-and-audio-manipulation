@@ -45,6 +45,9 @@ function App() {
   const pitchRef = useRef<any>();
 
   const handleVideoInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+    if (videoFile) {
+      playerRef.current?.disconnect();
+    }
     if (event.target.files) {
       setIsAudioLoading(true);
       setVideoFile(event.target.files[0]);
@@ -75,7 +78,7 @@ function App() {
   const isPlaying = () => {
     // animationRef.current = requestAnimationFrame(whilePlaying);
     animationRef.current = window.setInterval(whilePlaying, 200);
-    console.log('IS PLAYING --> ')
+    console.log("IS PLAYING --> ");
     //@ts-ignore
     Tone.Transport.start();
     if (videoTagRef.current) {
@@ -87,14 +90,17 @@ function App() {
           ((duration * 3) / 4 - videoTagRef.current?.currentTime) | duration
         }s ease-out`;
       }
-      addBlur()
+      addBlur();
     }
   };
   const addBlur = () => {
-    if(videoTagRef.current) {
+    if (videoTagRef.current) {
       currentTime = videoTagRef.current ? videoTagRef.current?.currentTime : 0;
       const threeQuartersTotal = duration * (3 / 4);
-      console.log('currentTime <= threeQuartersTotal -> ', currentTime <= threeQuartersTotal)
+      console.log(
+        "currentTime <= threeQuartersTotal -> ",
+        currentTime <= threeQuartersTotal
+      );
       if (currentTime <= threeQuartersTotal) {
         const filterValue =
           "blur(" +
@@ -105,11 +111,12 @@ function App() {
         videoTagRef.current.style.transition = "";
       }
     }
-  }
+  };
 
   const whilePlaying = () => {
     currentTime = videoTagRef.current ? videoTagRef.current?.currentTime : 0;
     calculatePitch();
+    addBlur();
     // animationRef.current = requestAnimationFrame(whilePlaying);
   };
   const isPausing = () => {
@@ -120,7 +127,7 @@ function App() {
       //   filter = computedStyle.getPropertyValue("filter");
       // videoTagRef.current.style.filter = filter;
       // videoTagRef.current.classList.remove("unBlur");
-      addBlur()
+      addBlur();
     }
     //@ts-ignore
     Tone.Transport.pause();
@@ -144,7 +151,9 @@ function App() {
   };
 
   const resetAudio = () => {
-    playerRef.current?.dispose();
+    //@ts-ignore
+    Tone.Transport.stop();
+    setIsAudioPlaying(false);
     // if (videoTagRef.current) videoTagRef.current.classList.remove("unBlur");
   };
 
@@ -168,14 +177,18 @@ function App() {
                 ref={videoTagRef}
                 controls
                 onPlaying={isPlaying}
-                onPause={() => {isPausing(); console.log('FROM ON PAUSE')}}
-                onEnded={() => {resetAudio(); console.log('ENDED') }}
+                onPause={() => {
+                  isPausing();
+                  console.log("FROM ON PAUSE");
+                }}
+                onEnded={() => {
+                  resetAudio();
+                  console.log("ENDED");
+                }}
                 className={`blur ${isAudioPlaying && "unBlur"}`}
                 muted
                 onSeeked={isPausing}
               />
-              {/* <Blur blur={a}></Blur> */}
-              <button onClick={resetAudio}>reset</button>
             </div>
             {/* <button onClick={togglePlayPause}>Play</button> */}
           </>
